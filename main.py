@@ -55,7 +55,7 @@ def open_loginWindow():
         if result:
             messagebox.showinfo("Login Successful", f"Welcome, {username}!")
             window.destroy()
-            open_mainWindow()
+            open_adminDashboard()
         else:
             messagebox.showerror("Login Failed", "Invalid username or password.")
         
@@ -374,7 +374,10 @@ def open_resultsWindow(class_name, in_class_hours, out_of_class_hours, credit_ho
 def open_feedbackWindow():
 
     from pathlib import Path
-    from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
+    from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, messagebox
+    import sqlite3
+    from datetime import datetime
+    import re
 
     OUTPUT_PATH = Path(__file__).parent
     ASSETS_PATH = OUTPUT_PATH / "assets/frame1"
@@ -387,7 +390,6 @@ def open_feedbackWindow():
 
     feedback_window.geometry("1200x675")
     feedback_window.configure(bg = "#343346")
-
 
     canvas = Canvas(
         feedback_window,
@@ -576,7 +578,7 @@ def open_feedbackWindow():
         image=button_image_1,
         borderwidth=0,
         highlightthickness=0,
-        command=lambda: print("button_1 clicked"),
+        command=lambda: (feedback_window.destroy(), open_loginWindow()),
         relief="flat",
         bg="#455D9A"
     )
@@ -593,7 +595,7 @@ def open_feedbackWindow():
         image=button_image_2,
         borderwidth=0,
         highlightthickness=0,
-        command=lambda: print("button_2 clicked"),
+        command=lambda: (storeData()),
         relief="flat",
         bg="#455D9A"
     )
@@ -696,6 +698,41 @@ def open_feedbackWindow():
         width=50.0,
         height=50.0
     )
+
+    def storeData():
+        if re.match(r"^[^@]+@[^@]+\.[^@]+$", str(entry_2.get())):
+            name = entry_1.get()
+            email = entry_2.get()
+            suggested_improvements = entry_3.get()
+            like_most = entry_4.get()
+            other = entry_5.get()
+            if name and email and suggested_improvements and like_most and other:
+                connection = sqlite3.connect('records.db')
+                cursor = connection.cursor()
+
+                # Set the current date as the submission_date
+                submission_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                
+                # SQL query to insert data into the feedback table
+                insert_query = """
+                INSERT INTO feedback (name, email, suggested_improvements, like_most, other, submission_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """
+                
+                # Execute the query with the provided data
+                cursor.execute(insert_query, (name, email, suggested_improvements, like_most, other, submission_date))
+                
+                # Commit the transaction
+                connection.commit()
+                messagebox.showinfo("Success!","Feedback inserted successfully!")
+                feedback_window.destroy()
+                open_loginWindow()
+            else:
+                messagebox.showerror("Invalid input", "Please fill all fields before submitting.")
+        else:
+            print(entry_2.get())
+            messagebox.showerror("Invalid Email", "Please enter a valid email address.")
+
     feedback_window.resizable(False, False)
     feedback_window.mainloop()
 
@@ -1333,4 +1370,441 @@ def open_historyWindow(date, class_name):
     # Run the application
     window.mainloop()
 
-open_historyWindow('2024-11-04', 'BIO-1010S-RD01')
+def open_adminDashboard():
+    from pathlib import Path
+    from tkinter import Tk, Canvas, Button, PhotoImage
+
+    # Define paths to assets
+    OUTPUT_PATH = Path(__file__).parent
+    ASSETS_PATH = OUTPUT_PATH / "assets/frame9"
+
+    def relative_to_assets(path: str) -> Path:
+        return ASSETS_PATH / Path(path)
+
+    # Create the main window
+    window = Tk()
+    window.geometry("1200x675")
+    window.configure(bg="#D9D9D9")
+
+    # Set up the canvas
+    canvas = Canvas(
+        window,
+        bg="#D9D9D9",
+        height=675,
+        width=1200,
+        bd=0,
+        highlightthickness=0,
+        relief="ridge"
+    )
+    canvas.place(x=0, y=0)
+
+    # Create background rectangles
+    canvas.create_rectangle(
+        0.0, 375.0, 450.0, 525.0,
+        fill="#D9D9D9", outline=""
+    )
+    canvas.create_rectangle(
+        0.0, 0.0, 1200.0, 375.0,
+        fill="#343346", outline=""
+    )
+
+    # Add text to the canvas
+    canvas.create_text(
+        449.0, 18.0,
+        anchor="nw",
+        text="WELCOME ADMIN!",
+        fill="#FFFFFF",
+        justify="center",
+        font=("Jost Black", 20)
+    )
+    canvas.create_text(
+        315.0, 51.0,
+        anchor="nw",
+        text="PRINCE GEORGE’S COMMUNITY COLLEGE",
+        fill="#FFFFFF",
+        justify="center",
+        font=("Jost ExtraLight", 20)
+    )
+    canvas.create_text(
+        187.5, 123.0,
+        anchor="nw",
+        text=(
+            "Welcome! Thank you for your dedication to fostering a supportive learning\n"
+            "environment at Prince George's Community College. Your work in reviewing feedback and\n"
+            "tracking academic progress directly impacts our students' success. We're grateful for\n"
+            "your continued commitment to excellence and collaboration. Let’s make a difference together!"
+        ),
+        fill="#FFFFFF",
+        justify="center",
+        font=("Jost Regular", 15)
+    )
+
+    # Load images and create buttons
+    button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
+    button_1 = Button(
+        image=button_image_1,
+        borderwidth=0,
+        highlightthickness=0,
+        command=lambda: (window.destroy(), open_feedbackDataWindow()),
+        relief="flat"
+    )
+    button_1.place(x=0.0, y=375.0, width=450.0, height=150.0)
+
+    button_image_2 = PhotoImage(file=relative_to_assets("button_2.png"))
+    button_2 = Button(
+        image=button_image_2,
+        borderwidth=0,
+        highlightthickness=0,
+        command=lambda: (window.destroy(), open_recordsDataWindow()),
+        relief="flat"
+    )
+    button_2.place(x=0.0, y=525.0, width=450.0, height=150.0)
+
+    button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
+    button_3 = Button(
+        image=button_image_3,
+        borderwidth=0,
+        highlightthickness=0,
+        command=lambda: (window.destroy(), open_loginWindow()),
+        relief="flat"
+    )
+    button_3.place(x=450.0, y=525.0, width=450.0, height=150.0)
+
+    button_image_4 = PhotoImage(file=relative_to_assets("button_4.png"))
+    button_4 = Button(
+        image=button_image_4,
+        borderwidth=0,
+        highlightthickness=0,
+        command=lambda: (window.destroy(), open_helpWindow()),
+        relief="flat"
+    )
+    button_4.place(x=450.0, y=375.0, width=450.0, height=150.0)
+
+    # Place image on the canvas
+    image_image_1 = PhotoImage(file=relative_to_assets("image_1.png"))
+    image_1 = canvas.create_image(
+        1049.0, 524.0, image=image_image_1
+    )
+
+    # Disable window resizing and run main loop
+    window.resizable(False, False)
+    window.mainloop()
+
+def open_feedbackDataWindow():
+    from pathlib import Path
+    from tkinter import Tk, Canvas, Text, Button, PhotoImage, messagebox, Scrollbar, END
+    import sqlite3
+
+    # Define paths to assets
+    OUTPUT_PATH = Path(__file__).parent
+    ASSETS_PATH = OUTPUT_PATH / "assets/frame10"
+
+    def relative_to_assets(path: str) -> Path:
+        return ASSETS_PATH / Path(path)
+
+    # Create the main window
+    window = Tk()
+    window.geometry("1200x675")
+    window.configure(bg="#343346")
+
+    # Set up the canvas
+    canvas = Canvas(
+        window,
+        bg="#343346",
+        height=675,
+        width=1200,
+        bd=0,
+        highlightthickness=0,
+        relief="ridge"
+    )
+    canvas.place(x=0, y=0)
+
+    # Add text to the canvas
+    canvas.create_text(
+        44.0, 35.0,
+        anchor="nw",
+        text="FEEDBACK & SURVEY RESPONSES",
+        fill="#FFFFFF",
+        font=("Jost Regular", 30)
+    )
+
+    # Create an entry background image and Text widget
+    entry_image_1 = PhotoImage(file=relative_to_assets("entry_1.png"))
+    entry_bg_1 = canvas.create_image(599.5, 366.5, image=entry_image_1)
+
+    entry_1 = Text(
+        bd=0,
+        bg="#1e1d28",
+        fg="#FFFFFF",
+        highlightthickness=0
+    )
+
+    scrollbar = Scrollbar(window, command=entry_1.yview)
+    scrollbar.pack(side='right', fill='y')
+    entry_1.config(yscrollcommand=scrollbar.set)
+
+    entry_1.place(
+        x=44.0,
+        y=109.0,
+        width=1111.0,
+        height=513.0
+    )
+
+    # Add a button with an image
+    button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
+    button_1 = Button(
+        image=button_image_1,
+        borderwidth=0,
+        highlightthickness=0,
+        command=lambda: (window.destroy(), open_adminDashboard()),
+        relief="flat"
+    )
+    button_1.place(
+        x=933.0,
+        y=35.0,
+        width=222.0,
+        height=43.0
+    )
+
+
+    # Connect to the SQLite database
+    conn = sqlite3.connect('records.db')
+    cursor = conn.cursor()
+
+    # Execute the query to get all rows from the feedback table
+    cursor.execute("SELECT * FROM feedback")
+
+    # Fetch all the results (rows)
+    rows = cursor.fetchall()
+
+    # Clear the current content in the Text widget
+    entry_1.delete(1.0, END)
+
+    # Loop through the rows and insert each row into the Text widget
+    for index, row in enumerate(rows, start=1):
+        entry_1.insert(END, f"Index: {index}\n")
+        entry_1.insert(END, f"ID: {row[0]}\n")
+        entry_1.insert(END, f"Name: {row[1]}\n")
+        entry_1.insert(END, f"Email: {row[2]}\n")
+        entry_1.insert(END, f"Suggested Improvements: {row[3]}\n")
+        entry_1.insert(END, f"Like Most: {row[4]}\n")
+        entry_1.insert(END, f"Other: {row[5]}\n")
+        entry_1.insert(END, f"Submission Date: {row[6]}\n")
+        entry_1.insert(END, "-" * 50 + "\n")  # Separator between records
+
+    # Close the connection
+    conn.close()
+
+    # Disable window resizing and run main loop
+    window.resizable(False, False)
+    window.mainloop()
+
+def open_recordsDataWindow():
+    from pathlib import Path
+    from tkinter import Tk, Canvas, Text, Button, PhotoImage, END, Scrollbar
+    import sqlite3
+
+    # Define paths to assets
+    OUTPUT_PATH = Path(__file__).parent
+    ASSETS_PATH = OUTPUT_PATH / "assets/frame10"
+
+    def relative_to_assets(path: str) -> Path:
+        return ASSETS_PATH / Path(path)
+
+    # Create the main window
+    window = Tk()
+    window.geometry("1200x675")
+    window.configure(bg="#343346")
+
+    # Set up the canvas
+    canvas = Canvas(
+        window,
+        bg="#343346",
+        height=675,
+        width=1200,
+        bd=0,
+        highlightthickness=0,
+        relief="ridge"
+    )
+    canvas.place(x=0, y=0)
+
+    # Add text to the canvas
+    canvas.create_text(
+        44.0, 35.0,
+        anchor="nw",
+        text="STUDENT REPORTS",
+        fill="#FFFFFF",
+        font=("Jost Regular", 30)
+    )
+
+    # Create an entry background image and Text widget
+    entry_image_1 = PhotoImage(file=relative_to_assets("entry_1.png"))
+    entry_bg_1 = canvas.create_image(599.5, 366.5, image=entry_image_1)
+
+    entry_1 = Text(
+        bd=0,
+        bg="#1e1d28",
+        fg="#FFFFFF",
+        highlightthickness=0
+    )
+
+    # Create a Scrollbar and link it to the Text widget
+    scrollbar = Scrollbar(window, command=entry_1.yview)
+    scrollbar.pack(side='right', fill='y')
+
+    # Configure the Text widget to update the scrollbar position
+    entry_1.config(yscrollcommand=scrollbar.set)
+
+    entry_1.place(
+        x=44.0,
+        y=109.0,
+        width=1111.0,
+        height=513.0
+    )
+
+    # Add a button with an image
+    button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
+    button_1 = Button(
+        image=button_image_1,
+        borderwidth=0,
+        highlightthickness=0,
+        command=lambda: (window.destroy(), open_adminDashboard()),
+        relief="flat"
+    )
+    button_1.place(
+        x=933.0,
+        y=35.0,
+        width=222.0,
+        height=43.0
+    )
+
+    # Connect to the SQLite database
+    conn = sqlite3.connect('records.db')
+    cursor = conn.cursor()
+
+    # Execute the query to get all rows from the feedback table
+    cursor.execute("SELECT * FROM records")
+
+    # Fetch all the results (rows)
+    rows = cursor.fetchall()
+
+    # Clear the current content in the Text widget
+    entry_1.delete(1.0, END)
+
+    # Loop through the rows and insert each row into the Text widget
+    for index, row in enumerate(rows):
+        entry_1.insert('end', f"Index: {index + 1}\n")
+        entry_1.insert('end', f"Date: {row[0]}\n")
+        entry_1.insert('end', f"Time: {row[1]}\n")
+        entry_1.insert('end', f"Class Name: {row[2]}\n")
+        entry_1.insert('end', f"In-Class Hours: {row[3]}\n")
+        entry_1.insert('end', f"Out-of-Class Hours: {row[4]}\n")
+        entry_1.insert('end', f"Credit Hours: {row[5]}\n")
+        entry_1.insert('end', "-" * 50 + '\n')
+
+    # Close the connection
+    conn.close()
+
+    # Disable window resizing and run main loop
+    window.resizable(False, False)
+    window.mainloop()
+
+def open_thankyouWindow():
+    from pathlib import Path
+    from tkinter import Tk, Canvas, Button, PhotoImage
+
+    OUTPUT_PATH = Path(__file__).parent
+    ASSETS_PATH = OUTPUT_PATH / "assets/frame11"
+
+    def relative_to_assets(path: str) -> Path:
+        return ASSETS_PATH / Path(path)
+
+    window = Tk()
+
+    window.geometry("1200x675")
+    window.configure(bg="#343346")
+
+    canvas = Canvas(
+        window,
+        bg="#343346",
+        height=675,
+        width=1200,
+        bd=0,
+        highlightthickness=0,
+        relief="ridge"
+    )
+
+    canvas.place(x=0, y=0)
+
+    # Buttons at the top
+    button_image_1 = PhotoImage(file=relative_to_assets("button_1.png"))
+    button_1 = Button(
+        image=button_image_1,
+        borderwidth=0,
+        highlightthickness=0,
+        bg=("#343346"),
+        command=lambda: (window.destroy(), open_mainWindow()),
+        relief="flat"
+    )
+    button_1.place(x=1123.0, y=23.0, width=54.0, height=55.0)
+
+    button_image_2 = PhotoImage(file=relative_to_assets("button_2.png"))
+    button_2 = Button(
+        image=button_image_2,
+        borderwidth=0,
+        highlightthickness=0,
+        bg=("#343346"),
+        command=lambda: (window.destroy(), open_helpWindow()),
+        relief="flat"
+    )
+    button_2.place(x=1075.0, y=25.0, width=50.0, height=50.0)
+
+    button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
+    button_3 = Button(
+        image=button_image_3,
+        borderwidth=0,
+        highlightthickness=0,
+        bg=("#343346"),
+        command=lambda: (window.destroy(), open_recordsWindow()),
+        relief="flat"
+    )
+    button_3.place(x=1025.0, y=25.0, width=50.0, height=50.0)
+
+    # Center ellipse
+    canvas.create_oval(
+        20.0, 56.0, 1179.0, 611.0,
+        fill="#455D9A",
+        outline=""
+    )
+
+    # Main message text
+    canvas.create_text(
+        63.0,
+        267.0,
+        anchor="nw",
+        text="Thank you for using the Prince George’s Community College Credit Hour Calculator! We’re\nthrilled to support you in planning your academic journey and maximizing your course load\nefficiency. Our goal is to make your experience as smooth and valuable as possible, helping you\nfocus on what matters most—your education and success. We appreciate your time and trust in\nusing this tool and look forward to supporting you through each semester.",
+        fill="#FFFFFF",
+        justify="center",
+        font=("Jost Regular", 25 * -1)
+    )
+
+    # Center button at the bottom
+    button_image_4 = PhotoImage(file=relative_to_assets("button_4.png"))
+    button_4 = Button(
+        image=button_image_4,
+        borderwidth=0,
+        highlightthickness=0,
+        bg=("#455D9A"),
+        command=lambda: (window.destroy(), open_loginWindow()),
+        relief="flat"
+    )
+    button_4.place(x=546.0, y=507.0, width=112.0, height=94.0)
+
+    # Top image
+    image_image_1 = PhotoImage(file=relative_to_assets("image_1.png"))
+    image_1 = canvas.create_image(599.0, 161.0, image=image_image_1)
+
+    window.resizable(False, False)
+    window.mainloop()
+
+open_loginWindow()
