@@ -67,7 +67,7 @@ def open_loginWindow():
     login_button.place(x=725, y=505, width=190, height=57)
 
     #Button for students.
-    login_button = tk.Button(window, text="I'm a Student", bg="#5A6BAA", fg="white", font=("Arial", 16, "bold"), borderwidth=0,
+    login_button = tk.Button(window, text="Guest", bg="#5A6BAA", fg="white", font=("Arial", 16, "bold"), borderwidth=0,
                             highlightthickness=0, command=lambda: (window.destroy(), open_mainWindow()))
     login_button.place(x=920, y=505, width=190, height=57)
 
@@ -187,7 +187,7 @@ def open_mainWindow():
 
 def open_resultsWindow(class_name, in_class_hours, out_of_class_hours, credit_hours):
     from pathlib import Path
-    from tkinter import Tk, Text, Button, Label, PhotoImage
+    from tkinter import Tk, Text, Button, Label, PhotoImage, messagebox
 
     import sqlite3
     from datetime import datetime
@@ -304,7 +304,7 @@ def open_resultsWindow(class_name, in_class_hours, out_of_class_hours, credit_ho
         image=button_2_img,
         borderwidth=0,
         highlightthickness=0,
-        command=lambda: on_button_click(2),
+        command=lambda: messagebox.showinfo("Not available","This feature currently isn't available"),
         relief="flat"
     )
     button_2.place(x=652, y=574, width=193, height=35)
@@ -1121,6 +1121,16 @@ def open_recordsWindow():
     )
     date_label.place(x=80, y=203)
 
+    #Format explanation
+    date_label = Label(
+        window,
+        text="YYYY-MM-DD",
+        bg="#343346",
+        fg="#FFFFFF",
+        font=("Jost Bold", 30)
+    )
+    date_label.place(x=115, y=303)
+
     # Entry field for date
     entry_1 = Entry(
         window,
@@ -1140,7 +1150,7 @@ def open_recordsWindow():
         fg="#FFFFFF",
         font=("Jost Bold", 30)
     )
-    course_label.place(x=80, y=440)
+    course_label.place(x=50, y=440)
 
     # Entry field for course number
     entry_2 = Entry(
@@ -1306,7 +1316,7 @@ def open_historyWindow(date, class_name):
         borderwidth=0,
         highlightthickness=0,
         bg = "#343346",
-        command=lambda: print("button_4 clicked"),
+        command=lambda: messagebox.showinfo("Not available","This feature currently isn't available"),
         relief="flat"
     )
     button_4.place(x=800.0, y=574.0, width=220.0, height=35.0)
